@@ -1,0 +1,26 @@
+#!/bin/bash
+
+PATH=${HOME}/loca/bin:${PATH}
+CONCURRENCY=$(getconf _NPROCESSORS_ONLN)
+
+SRC_DIR=${HOME}/local/src
+if [ ! -d ${SRC_DIR} ]; then
+  echo "Please make source directory: ${SRC_DIR}"
+  exit;
+fi
+
+ARC_DIR=${SRC_DIR}/Archive
+if [ ! -d ${ARC_DIR} ]; then
+  echo "Please make archive directory: ${ARC_DIR}"
+  exit;
+fi
+
+STOW_DIR=${HOME}/local/stow
+if [ ! -d ${STOW_DIR} ]; then
+  echo "Please make stow directory: ${STOW_DIR}"
+  exit;
+fi
+
+if [ $(which paco) = "" ]; then
+  echo "Please install paco"
+fi

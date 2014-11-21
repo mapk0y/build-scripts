@@ -1,0 +1,92 @@
+#!/bin/bash
+# vim: set expandtab ts=2 sw=2 sts=0 :
+
+set -e
+
+source build-base
+
+TARGET_PROG='libevent-2.0.21-stable'
+DST=${ARC_DIR}/${TARGET_PROG}.tar.gz
+URL="https://github.com/downloads/libevent/libevent/${TARGET_PROG}.tar.gz"
+INST_NAME=${TARGET_PROG}
+TARGET_SRC=${SRC_DIR}/${TARGET_PROG}
+
+_download() {
+  if [ -f ${DST} ]; then
+    echo "already downloaded target program: ${TARGET_PROG}"
+    return
+  fi
+  echo "Get File"
+  wget -O ${DST} ${URL}
+}
+
+_extract() {
+  if [ -d ${TARGET_SRC} ]; then
+    echo "already extracted files: ${TARGET_PROG}"
+    return
+  fi
+  echo "Extract File"
+  tar xvzf ${DST} -C ${SRC_DIR}
+}
+
+_clean() {
+  echo "## clean ##"
+  cd ${TARGET_SRC}
+  if [ -f Makefile ]; then
+    echo "distclean"
+    make distclean
+  fi
+}
+
+_build() {
+  echo "## build ##"
+  cd ${TARGET_SRC}
+  PREFIX=${STOW_DIR}/${INST_NAME}
+  if [ -d ${PREFIX} ]; then
+    echo "This version is already installed"
+    exit
+  fi
+
+  opts="--prefix=${PREFIX} "
+
+  sh -c "./configure ${opts}" && make
+}
+
+_install() {
+  cd ${TARGET_SRC}
+  # database update
+  paco -ua
+  # install
+  paco -p ${INST_NAME} make install
+}
+
+# main
+
+case $1 in
+  all)
+    _download
+    _extract
+    _clean
+    _build
+    _install
+    ;;
+  build)
+    _build
+    ;;
+  clean)
+    _clean
+    ;;
+  install)
+    _install
+    ;;
+  download)
+    _download
+    ;;
+  extract)
+    _extract
+    ;;
+  *)
+    echo "all, download, extract, clean, build, install"
+    exit
+    ;;
+esac

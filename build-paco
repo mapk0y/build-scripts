@@ -1,0 +1,80 @@
+#!/bin/bash
+# vim: set expandtab ts=2 sw=2 sts=0 :
+
+set -e
+
+PATH=${HOME}/loca/bin:${PATH}
+SRC_DIR=${HOME}/local/src
+ARC_DIR=${SRC_DIR}/Archive
+STOW_DIR=${HOME}/local/stow
+
+VER='2.0.9'
+
+_download() {
+  if [ -d ${SRC_DIR}/paco-${VER} ]; then
+    echo "already download files: paco-${VER}"
+    return
+  fi
+  DST=${ARC_DIR}/paco-${VER}.tar.gz
+  url="http://downloads.sourceforge.net/project/paco/paco/${VER}/paco-${VER}.tar.gz"
+  echo "Get File"
+  wget -O ${DST} ${url}
+  echo "Extract File"
+  tar xzf ${DST} -C ${SRC_DIR}
+}
+
+_clean() {
+  echo "## clean ##"
+  if [ -f Makefile ]; then
+    echo "distclean"
+    make distclean
+  fi
+  CONFIG_CACHE='src/auto/config.cache'
+  if [ -f ${CONFIG_CACHE} ]; then
+    echo "remove cache file"
+    rm -vf ${CONFIG_CACHE}
+  fi
+}
+
+_build() {
+  echo "## build ##"
+  PREFIX=${STOW_DIR}/${APP_VER}
+  if [ -d ${PREFIX} ]; then
+    echo "This version is already installed"
+    exit
+  fi
+
+  opts="--prefix=${PREFIX} "
+
+  [ -f ./configure ] || make configure
+  sh -c "./configure ${opts}" && make
+}
+
+_install() {
+  # update
+  make install
+  # install
+}
+
+# main
+
+case $1 in
+  all)
+    _download
+    _clean
+    _build
+    _install
+    ;;
+  build)
+    _build
+    ;;
+  clean)
+    _clean
+    ;;
+  install)
+    _install
+    ;;
+  download)
+    _download
+    ;;
+esac

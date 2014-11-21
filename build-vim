@@ -1,0 +1,86 @@
+#!/bin/bash
+# vim: set expandtab ts=2 sw=2 sts=0 :
+
+set -e
+
+PATH=${HOME}/loca/bin:${PATH}
+VIM_REPOS=${HOME}/local/repos/vim
+STOW_DIR=${HOME}/local/stow
+
+cd ${VIM_REPOS}
+
+_clean() {
+  echo "## clean ##"
+  if [ -f Makefile ]; then
+    echo "distclean"
+    make distclean
+  fi
+  CONFIG_CACHE='src/auto/config.cache'
+  if [ -f ${CONFIG_CACHE} ]; then
+    echo "remove cache file"
+    rm -vf ${CONFIG_CACHE}
+  fi
+}
+
+_build() {
+  VERSION=$(hg tags | sed -n -e '2{s/ .*$//p}')
+  APP_VER=vim-${VERSION}
+  PREFIX=${STOW_DIR}/${APP_VER}
+  echo "## build ##"
+  if [ -d ${PREFIX} ]; then
+    echo "This version is already installed"
+    exit
+  fi
+
+  opts="--prefix=${PREFIX} \
+--with-features=huge \
+--enable-multibyte \
+--with-compiledby='mapk0y <mapk0y@gmail.com>' \
+--enable-pythoninterp \
+--enable-luainterp \
+--enable-rubyinterp \
+--enable-gui=no \
+--enable-fail-if-missing \
+$@
+"
+  [ -f ./configure ] || make configure
+  sh -c "./configure ${opts}" && make
+}
+
+_install() {
+  # update
+  paco -ua
+  # install
+  paco -p ${APP_VER} make install
+}
+
+_update() {
+  hg pull
+  hg update -C
+}
+
+# main
+
+case $1 in
+  all)
+    _update
+    _clean
+    _build
+    _install
+    ;;
+  update)
+    _update
+    ;;
+  clean)
+    _clean
+    ;;
+  build)
+    _build
+    ;;
+  install)
+    _install
+    ;;
+  *)
+    echo "all, update, clean, build, install"
+    exit
+esac

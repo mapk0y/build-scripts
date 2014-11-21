@@ -1,0 +1,68 @@
+#!/bin/bash
+# vim: set expandtab ts=2 sw=2 sts=0 :
+
+set -e
+
+source build-base
+REPOS=${HOME}/local/repos/tmux-tmux-code
+
+cd ${REPOS}
+
+APP_VER=tmux-$(date +%Y%m%d)
+PREFIX=${STOW_DIR}/${APP_VER}
+
+_clean() {
+  echo "## clean ##"
+  if [ -f Makefile ]; then
+    echo "distclean"
+    make distclean
+  fi
+  git clean -f && git checkout -f
+}
+
+_build() {
+  echo "## build ##"
+  if [ -d ${PREFIX} ]; then
+    echo "This version is already installed"
+    exit
+  fi
+
+  opts="--prefix=${PREFIX} PKG_CONFIG_PATH=${HOME}/local/lib/pkgconfig LDFLAGS='-Wl,-rpath=${HOME}/local/lib'"
+
+  [ -f ./configure ] || sh -c autogen.sh
+  sh -c "./configure ${opts}" && make -j ${CONCURRENCY}
+}
+
+_install() {
+  # update
+  paco -ua
+  # install
+  paco -p ${APP_VER} make install
+}
+
+_update() {
+  git pull
+}
+
+# main
+
+case $1 in
+  all)
+    _update
+    _clean
+    _build
+    _install
+    ;;
+  build)
+    _build
+    ;;
+  clean)
+    _clean
+    ;;
+  install)
+    _install
+    ;;
+  update)
+    _update
+    ;;
+esac
