@@ -4,7 +4,8 @@
 set -e
 
 source build-base
-REPOS=${HOME}/local/repos/tmux-tmux-code
+# https://github.com/tmux/tmux.git
+REPOS=${HOME}/local/repos/tmux
 
 cd ${REPOS}
 
