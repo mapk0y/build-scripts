@@ -29,7 +29,7 @@ _build() {
 
   opts="--prefix=${PREFIX} PKG_CONFIG_PATH=${HOME}/local/lib/pkgconfig LDFLAGS='-Wl,-rpath=${HOME}/local/lib'"
 
-  [ -f ./configure ] || sh -c autogen.sh
+  [ -f ./configure ] || sh -c ./autogen.sh
   sh -c "./configure ${opts}" && make -j ${CONCURRENCY}
 }
 

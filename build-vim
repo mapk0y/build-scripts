@@ -44,10 +44,12 @@ _build() {
 $@
 "
   [ -f ./configure ] || make configure
-  sh -c "./configure ${opts}" && make
+  sh -c "./configure ${opts}" && make -j$(nproc)
 }
 
 _install() {
+  VERSION=$(hg tags | sed -n -e '2{s/ .*$//p}')
+  APP_VER=vim-${VERSION}
   # update
   paco -ua
   # install
